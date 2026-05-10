@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s # معلم هر ۱۵ ثانیه یک‌بار به همه سر می‌زند
+  evaluation_interval: 15s
+
+scrape_configs:
+  # اولین دانش‌آموز: خودِ پرومتئوس!
+  # (پرومتئوس به صورت پیش‌فرض وضعیت سلامت خودش را هم مانیتور می‌کند)
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # دومین دانش‌آموز: اپلیکیشن Backend ما (FastAPI)
+  - job_name: "enterprise_backend"
+    static_configs:
+      # به جای IP، از سیستم DNS داکر استفاده می‌کنیم
+      - targets: ["backend:8000"]

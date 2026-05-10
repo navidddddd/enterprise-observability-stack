@@ -1,0 +1,66 @@
+services:
+  # ----------------------------------------
+  # Database Service
+  # ----------------------------------------
+  db:
+    image: postgres:15
+    command: postgres -c max_connections=500 # <--- این خط جادویی را اضافه کنید
+    container_name: enterprise_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin_monitor
+      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_DB: enterprise_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # ----------------------------------------
+  # Backend Service
+  # ----------------------------------------
+  backend:
+    build: ./backend
+    container_name: enterprise_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://admin_monitor:secure_password_123@db:5432/enterprise_db
+      - PYTHONUNBUFFERED=1
+
+  # ----------------------------------------
+  # Prometheus Service
+  # ----------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: enterprise_prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # ----------------------------------------
+  # Grafana Service (بخش جدید)
+  # ----------------------------------------
+  grafana:
+    image: grafana/grafana:10.1.5
+    container_name: enterprise_grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      # برای اینکه داشبوردهایی که می‌سازیم با خاموش شدن کانتینر پاک نشوند
+      - grafana_data:/var/lib/grafana
+
+# ----------------------------------------
+# Volumes Declaration
+# ----------------------------------------
+volumes:
+  pg_data:
+  grafana_data: # والیوم جدید برای گرافانا
